@@ -1,0 +1,84 @@
+/* Overall page layout */
+.signup-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #fafafa;
+    font-family: Arial, sans-serif;
+}
+
+/* signup container box */
+.signup-container {
+    background-color: white;
+    width: 350px;
+    padding: 40px 40px 30px;
+    border: 1px solid #dbdbdb;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Instagram-like title */
+.signup-container h1 {
+    font-family: 'Billabong', cursive; /* Instagram-style font */
+    font-size: 48px;
+    color: #262626;
+    margin-bottom: 20px;
+}
+
+/* signup form layout */
+.signup-form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+}
+
+/* Input styling */
+.signup-form input {
+    padding: 10px;
+    border: 1px solid #dbdbdb;
+    border-radius: 4px;
+    background-color: #fafafa;
+    font-size: 14px;
+}
+
+/* Focus effect */
+.signup-form input:focus {
+    outline: none;
+    border-color: #a8a8a8;
+}
+
+/* Button styling */
+.signup-form button {
+    background-color: #0095f6;
+    color: white;
+    padding: 8px 0;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.signup-form button:hover {
+    background-color: #0077c2;
+}
+
+/* Sign up text */
+.signup-text {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #8e8e8e;
+}
+
+.signup-text a {
+    color: #0095f6;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.signup-text a:hover {
+    text-decoration: underline;
+}
