@@ -23,13 +23,21 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
-            return Response(serializer.validated_data, status=status.HTTP_200_OK) # returns jwt token in response
+            return Response(serializer.validated_data, status=status.HTTP_200_OK) #
+            # returns jwt token in response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class UserProfileView(RetrieveAPIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-    serializer_class = UserSerializer
+class GetUsernameView(APIView):
 
-    def get_object(self):
-        return self.request.user
+    def get(self, request):
+        username = request.user.username
+        # serializer = UserProfileSerializer(profile)
+        return Response({'username': username})
+
+# class UserProfileView(RetrieveAPIView):
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+#     serializer_class = UserSerializer
+#
+#     def get_object(self):
+#         return self.request.user

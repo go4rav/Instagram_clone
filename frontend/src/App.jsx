@@ -6,6 +6,7 @@ import SignUpPage from "./pages/SignUpPage";
 import HomePage from "./pages/HomePage";
 import UploadPostModal from "./components/UploadPostModal"
 import ProfilePage from "./pages/ProfilePage";
+import UpdateProfile from "./pages/UpdateProfile";
 
 function App() {
     return (
@@ -16,6 +17,7 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignUpPage />} />
                 <Route path="/home" element={<HomePage />} />
+                <Route path="/updateprofile" element={<UpdateProfile />} />
                 <Route path="/profile/:id" element={<ProfilePage />} />
             </Routes>
         </Router>

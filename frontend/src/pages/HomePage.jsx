@@ -9,6 +9,13 @@ const HomePage = () => {
     const navigate  = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const navigateProfilePage = () => {
+    username = axios.get(`${API_BASE_URL}users/getusername/`,{headers: {"Authorization":
+    `Bearer ${localStorage.getItem("token")}`}}).then(response => navigate(`/profile/${response.data.username}/`)).
+    catch(error => console.error("Error fetching username:", error));
+    };
+
+
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -172,9 +179,9 @@ const HomePage = () => {
 
           <div class="cursor-pointer  flex  rounded-3xl mb-20 py-2 active:font-semibold hover:bg-gray-50 hover:bg-opacity-10">
             <img class="w-7 h-7 ml-2 rounded-full " src="https://avatars.githubusercontent.com/u/26464462?v=4" alt="" />
-            <a href="#">
+            <button onClick = {navigateProfilePage}>
               <li class="pl-4">Profile</li>
-            </a>
+            </button>
           </div>
         </ul>
       </nav>

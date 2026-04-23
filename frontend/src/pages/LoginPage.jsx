@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import './LoginPage.css'
+import API_BASE_URL from "../config";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -11,7 +12,7 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:8000/api/users/login/", {
+      const response = await axios.post(`${API_BASE_URL}users/login/`, {
         username,
         password,
       });
@@ -19,6 +20,7 @@ const LoginPage = () => {
       navigate("/");
     } catch (error) {
       alert("Invalid credentials");
+      console.log(error)
     }
   };
 
