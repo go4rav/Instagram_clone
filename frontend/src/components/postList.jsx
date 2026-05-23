@@ -10,7 +10,7 @@ const PostList = () => {
     useEffect(() => {
         const token = localStorage.getItem("token");
         var invalid = false;
-        if (!token) {
+        if (!token | token=='undefined') {
             invalid = true;
         }
         else

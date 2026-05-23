@@ -23,7 +23,8 @@ const SignUpPage = () => {
             });
             console.log(response);
             localStorage.setItem("token", response.data.access);
-            navigate(`/updateprofile`); // Go to feed
+
+             navigate(`/login`); // go to login page
         } catch (error) {
             alert(`Sign up failed! ${error.message}`);
             console.error(error);

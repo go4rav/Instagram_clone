@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import API_BASE_URL from "../config";
@@ -6,6 +7,7 @@ import { useParams } from "react-router-dom";
 import './ProfilePage.css'
 import logo from "../assets/logo.png"
 import { jwtDecode } from "jwt-decode";
+import FollowersModal from "../components/FollowlistModal.jsx"
 
 const ProfilePage = () => {
 
@@ -16,10 +18,13 @@ const ProfilePage = () => {
     const [countFollowers, setCountFollowers] = useState(0)
     const [countFollowing, setCountFollowing] = useState(0)
     const navigate  = useNavigate();
-    const { id } = useParams();
-    const [isFollowed, setIsFollowed] = useState(false);
+    const { username } = useParams();
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [isOwner, setIsOwner] = useState(false);
+    const [isFollowListOpen, setIsFollowListOpen] = useState(false);
+    const [modalType, setModalType] = useState('followers');
 
-//  When there is a change in the isFollowed state variable,
+//  When there is a change in the isFollowing state variable,
 // 1. Re-run component function ✅
 // 2. Compare UI (Virtual DOM) ✅
 // 3. Update changed parts (button) ✅
@@ -27,17 +32,17 @@ const ProfilePage = () => {
     const handleFollowToggle = async () => {
     try {
        const token = localStorage.getItem("token");
-        if (isFollowed) {
-            await axios.post(`${API_BASE_URL}profile/unfollow/${id}/`, {}, {
+        if (isFollowing) {
+            await axios.post(`${API_BASE_URL}profile/unfollow/${username}/`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setIsFollowed(false);
+            setIsFollowing(false);
             setCountFollowers(prev => prev - 1);
         } else {
-            await axios.post(`${API_BASE_URL}profile/follow/${id}/`, {}, {
+            await axios.post(`${API_BASE_URL}profile/follow/${username}/`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setIsFollowed(true);
+            setIsFollowing(true);
             setCountFollowers(prev => prev + 1);
         }
     } catch (err) {
@@ -57,19 +62,27 @@ const ProfilePage = () => {
         const decoded = jwtDecode(access_token);
         console.log(decoded);
 
-        axios.get(`${API_BASE_URL}profile/view/${id}`,{
+        axios.get(`${API_BASE_URL}profile/view/${username}`,{
                 headers: {
                     "Content-Type": "multipart/form-data",
                     "Authorization": `Bearer ${localStorage.getItem("token")}`
                 }})
             .then(response => {
+                               console.log(response);
                                setPosts(response.data.posts);
                                setBio(response.data.bio);
                                setName(response.data.user_name);
                                setCountPosts(response.data.total_posts);
                                setCountFollowers(response.data.count_followers);
-                               setCountFollowing(response.data.count_following);})
+                               setCountFollowing(response.data.count_following);
+                               setIsOwner(response.data.is_owner)})
             .catch(error => console.error("Error fetching posts:", error));
+
+        axios.get(`${API_BASE_URL}profile/isfollowing/${username}`, {
+       headers: {
+                    "Content-Type": "multipart/form-data",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                }}).then(response => { console.log(response); setIsFollowing(response.data.is_following);})
     }, []);
 
 
@@ -97,20 +110,39 @@ const ProfilePage = () => {
                   <p className="font-sans text-[16px]"></p>
                 </span>
                 {/* React passes the latest state value into your function */}
-                  {isFollowed ?  
-                      <button className="bg-gray-500 text-white px-2 rounded">
+                 {/* Render the modal when isOnwer is true  */}
+                  {!isOwner && (isFollowing ?
+                      <button onClick={handleFollowToggle} className="bg-gray-500 text-white px-2 rounded">
                         Unfollow
                       </button> :
                       <button onClick={handleFollowToggle} className="bg-blue-500 text-white px-2 rounded">
                         Follow
-                      </button>}
+                      </button>)}
               </div>
 
               <div className="flex space-x-4 mt-4">
-                <div><span>{countPosts} posts</span></div>
-                <div><span>{countFollowers} followers</span></div>
-                <div><span>{countFollowing} following</span></div>
-              </div>
+                <div><span>{countPosts}  posts</span></div>
+                <div><span>{countFollowers}{" "} 
+                   <button onClick={()=>{setIsFollowListOpen(true);
+                                    setModalType('followers');}}>
+                    Followers
+                   </button>
+
+                  </span></div>
+                <div><span>{countFollowing}{" "}
+                  <button onClick={()=>{setIsFollowListOpen(true);
+                                  setModalType('following');}}>
+                    Following
+                   </button>
+                  </span></div>
+                </div>
+
+                <FollowersModal
+                    isOpen={isFollowListOpen}
+                    onClose={() => setIsFollowListOpen(false)}
+                    username={username}
+                    type={modalType}
+                />
 
               <div className="flex mt-4">
                 <span>

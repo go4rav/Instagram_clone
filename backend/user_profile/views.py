@@ -3,7 +3,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 from rest_framework.views import APIView
 from .models import UserProfile , User, Follow
-from .serializers import UserProfileSerializer, FollowSerializer
+from .serializers import UserProfileSerializer, FollowersSerializer, FollowingSerializer
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
@@ -13,12 +13,12 @@ class GetUserProfileInfo(APIView):
         try:
             # first get the user object associated with this username
             user = User.objects.get(username=username)
+
             # now filter the profile based on this user.
             profile = UserProfile.objects.get(user_id=user)
         except UserProfile.DoesNotExist:
             return Response({"error": "User profile not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = UserProfileSerializer(profile)
+        serializer = UserProfileSerializer(profile, context = {"request": request, "user": user })
         return Response(serializer.data)
 
 
@@ -49,10 +49,10 @@ class AddFollower(APIView):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
-    def post(self, request, user_id):
+    def post(self, request, username):
         try:
 
-            target_user = get_object_or_404(User, id=user_id)
+            target_user = get_object_or_404(User, username=username)
             # handles the case if the record already exists, then does nothing
             Follow.objects.get_or_create(followers = request.user, following = target_user)
 
@@ -62,22 +62,61 @@ class AddFollower(APIView):
         following = Follow.objects.filter(followers=request.user)
         # by writing many=True, you say that following is not a single object, it is a list of objects, hence
         # by writing this, FollowSerializer would now serialize one-by-one.
-        serializer = FollowSerializer(following, many=True)
+        serializer = FollowersSerializer(following, many=True)
 
         return Response(serializer.data,status=status.HTTP_201_CREATED)
 
+
+class IsFollowingView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request, username):
+        target_user = get_object_or_404(User, username=username)
+        # handles the case if the record already exists, then does nothing
+        is_following = Follow.objects.filter(followers = request.user, following = target_user).exists()
+
+        return Response({'is_following' : is_following},status=status.HTTP_200_OK)
+
+
+class FollowersListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request, username):
+        user = get_object_or_404(User, username=username)
+        # handles the case if the record already exists, then does nothing
+        followers = Follow.objects.filter(following=user)
+        # without many=True, it expects a single object, but its a queryset.
+        # here we already have the follow object, so we directly pass it in the FollowSerializer.
+        serializer = FollowersSerializer(followers, many=True)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+
+class FollowingListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request, username):
+        user = get_object_or_404(User, username=username)
+        # handles the case if the record already exists, then does nothing
+        following = Follow.objects.filter(followers=user)
+        # without many=True, it expects a single object, but its a queryset.
+        # here we already have the follow object, so we directly pass it in the FollowSerializer.
+        serializer = FollowingSerializer(following, many=True)
+        return Response(serializer.data,status=status.HTTP_200_OK)
 
 class DeleteFollower(APIView):
     permission_classes = [permissions.IsAuthenticated]
     # parser_classes = [MultiPartParser, FormParser]
 
-    def post(self, request, user_id):
+    def post(self, request, username):
         try:
-            target_user = get_object_or_404(User, id=user_id)
+            target_user = get_object_or_404(User, username=username)
             Follow.objects.filter(followers = request.user, following = target_user).delete()
         except Follow.DoesNotExist:
             return Response({"error": "Error occured while updating followers list"}, status=status.HTTP_404_NOT_FOUND)
 
         following = Follow.objects.filter(followers=request.user)
-        serializer = FollowSerializer(following, many=True)
+        serializer = FollowersSerializer(following, many=True)
         return Response(serializer.data,status=status.HTTP_201_CREATED)

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "../config";
@@ -13,11 +13,6 @@ const UpdateProfile= () => {
     const handleProfileUpdate = async (e) => {
         e.preventDefault();
         try {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                navigate("/login");
-                return;
-            }
             const formData = new FormData();
             formData.append("user_name", fullname);
             formData.append("bio", bio);
@@ -36,6 +31,17 @@ const UpdateProfile= () => {
             console.error(error);
         }
     };
+
+    useEffect(() => {
+
+        const token = localStorage.getItem("token");
+
+        // If already logged in → go home
+        if (!token || isTokenExpired(token)) {
+            navigate("/login");
+        }
+
+    }, [navigate]);
 
     return (
     <div className="signup-page">

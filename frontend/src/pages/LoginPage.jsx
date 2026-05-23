@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
+import { isTokenExpired } from "../utils/tokenUtils";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import './LoginPage.css'
@@ -23,6 +24,18 @@ const LoginPage = () => {
       console.log(error)
     }
   };
+
+
+  useEffect(() => {
+
+        const token = localStorage.getItem("token");
+
+        // If already logged in → go home
+        if (token && !isTokenExpired(token)) {
+            navigate("/");
+        }
+
+    }, [navigate]);
 
   const navigateSignUp = () => {
   navigate("/signup");

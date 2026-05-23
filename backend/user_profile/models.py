@@ -3,8 +3,9 @@ from django.contrib.auth.models import User
 
 class UserProfile(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_profile')
+    full_name = models.TextField(blank=True, default = '')
     user_name = models.TextField(blank=False)
-    display_profile = models.ImageField(upload_to='display_profile/')
+    display_profile = models.ImageField(upload_to='display_profile/', blank=True, null=True)
     bio = models.TextField(blank=True, default = '')
 
     def __str__(self):

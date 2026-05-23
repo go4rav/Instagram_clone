@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.generics import RetrieveAPIView
 from rest_framework import status
+from user_profile.models import UserProfile
 from .serializers import UserSerializer, LoginSerializer
 from django.contrib.auth import get_user_model
 
@@ -15,7 +16,8 @@ class SignupView(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save() # saves in database i guess
+            user = serializer.save() # saves in database i guess
+            UserProfile.objects.create(user_id=user, user_name = user.username)
             return Response(serializer.data, status=status.HTTP_201_CREATED) # returns user details in response.
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
