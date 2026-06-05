@@ -62,7 +62,7 @@ class AddFollower(APIView):
         following = Follow.objects.filter(followers=request.user)
         # by writing many=True, you say that following is not a single object, it is a list of objects, hence
         # by writing this, FollowSerializer would now serialize one-by-one.
-        serializer = FollowersSerializer(following, many=True)
+        serializer = FollowersSerializer(following, many=True,  context = {"request": request})
 
         return Response(serializer.data,status=status.HTTP_201_CREATED)
 
@@ -89,7 +89,7 @@ class FollowersListView(APIView):
         followers = Follow.objects.filter(following=user)
         # without many=True, it expects a single object, but its a queryset.
         # here we already have the follow object, so we directly pass it in the FollowSerializer.
-        serializer = FollowersSerializer(followers, many=True)
+        serializer = FollowersSerializer(followers, many=True, context = {"request": request})
         return Response(serializer.data,status=status.HTTP_200_OK)
 
 
@@ -103,7 +103,7 @@ class FollowingListView(APIView):
         following = Follow.objects.filter(followers=user)
         # without many=True, it expects a single object, but its a queryset.
         # here we already have the follow object, so we directly pass it in the FollowSerializer.
-        serializer = FollowingSerializer(following, many=True)
+        serializer = FollowingSerializer(following, many=True,  context = {"request": request})
         return Response(serializer.data,status=status.HTTP_200_OK)
 
 class DeleteFollower(APIView):
@@ -118,5 +118,20 @@ class DeleteFollower(APIView):
             return Response({"error": "Error occured while updating followers list"}, status=status.HTTP_404_NOT_FOUND)
 
         following = Follow.objects.filter(followers=request.user)
-        serializer = FollowersSerializer(following, many=True)
+        serializer = FollowersSerializer(following, many=True,  context = {"request": request})
+        return Response(serializer.data,status=status.HTTP_201_CREATED)
+
+class RemoveFollower(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    # parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, username):
+        try:
+            target_user = get_object_or_404(User, username=username)
+            Follow.objects.filter(followers = target_user, following = request.user).delete()
+        except Follow.DoesNotExist:
+            return Response({"error": "Error occured while updating followers list"}, status=status.HTTP_404_NOT_FOUND)
+
+        following = Follow.objects.filter(followers=request.user)
+        serializer = FollowersSerializer(following, many=True,  context = {"request": request})
         return Response(serializer.data,status=status.HTTP_201_CREATED)

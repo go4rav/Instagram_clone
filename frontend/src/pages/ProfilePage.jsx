@@ -23,6 +23,8 @@ const ProfilePage = () => {
     const [isOwner, setIsOwner] = useState(false);
     const [isFollowListOpen, setIsFollowListOpen] = useState(false);
     const [modalType, setModalType] = useState('followers');
+    const [loggedUser, setLoggedUser] = useState('');
+    const [render, setRender] = useState(false);
 
 //  When there is a change in the isFollowing state variable,
 // 1. Re-run component function ✅
@@ -53,6 +55,11 @@ const ProfilePage = () => {
       
     useEffect(() => {
         const token = localStorage.getItem("token");
+        axios.get(`${API_BASE_URL}users/getusername/`,{headers: {"Authorization":
+    `Bearer ${localStorage.getItem("token")}`}}).then(response => {
+      console.log(response);
+      setLoggedUser(response.data.username)}).
+    catch(error => console.error("Error fetching username:", error));
         console.log(token)
         if (!token) {
             navigate("/login");
@@ -78,12 +85,16 @@ const ProfilePage = () => {
                                setIsOwner(response.data.is_owner)})
             .catch(error => console.error("Error fetching posts:", error));
 
-        axios.get(`${API_BASE_URL}profile/isfollowing/${username}`, {
+        if(render){
+          axios.get(`${API_BASE_URL}profile/isfollowing/${username}`, {
        headers: {
                     "Content-Type": "multipart/form-data",
                     "Authorization": `Bearer ${localStorage.getItem("token")}`
-                }}).then(response => { console.log(response); setIsFollowing(response.data.is_following);})
-    }, []);
+                }}).then(response => { console.log(response); setIsFollowing(response.data.is_following);});
+        setRender(false);
+        }
+        
+    }, [username, render]);
 
 
   return (
@@ -140,7 +151,9 @@ const ProfilePage = () => {
                 <FollowersModal
                     isOpen={isFollowListOpen}
                     onClose={() => setIsFollowListOpen(false)}
+                    render = {() => setRender(true)}
                     username={username}
+                    loggedUser={loggedUser}
                     type={modalType}
                 />
 
