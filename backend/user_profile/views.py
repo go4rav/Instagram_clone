@@ -2,8 +2,8 @@ from rest_framework import generics, permissions
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 from rest_framework.views import APIView
-from .models import UserProfile , User, Follow
-from .serializers import UserProfileSerializer, FollowersSerializer, FollowingSerializer
+from .models import UserProfile , User, Follow, RecentProfileVisit
+from .serializers import UserProfileSerializer, FollowersSerializer, FollowingSerializer, RecentVisitsSerializer
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
@@ -16,9 +16,38 @@ class GetUserProfileInfo(APIView):
 
             # now filter the profile based on this user.
             profile = UserProfile.objects.get(user_id=user)
+            visited_user = get_object_or_404(User, username=username)
+            if visited_user!=request.user:
+                RecentProfileVisit.objects.create(visitor = request.user , visited_user = visited_user )
         except UserProfile.DoesNotExist:
             return Response({"error": "User profile not found"}, status=status.HTTP_404_NOT_FOUND)
         serializer = UserProfileSerializer(profile, context = {"request": request, "user": user })
+        return Response(serializer.data)
+
+
+class GetRecentVisitedProfiles(APIView):
+
+    def get(self, request):
+
+        # first get the user object associated with this username
+        recent_visits = (
+            RecentProfileVisit.objects
+            .filter(visitor=request.user)
+            .order_by("-visited_at")
+        )
+
+        unique_profiles = []
+        seen = set()
+
+        for visit in recent_visits:
+            if visit.visited_user_id not in seen:
+                seen.add(visit.visited_user_id)
+                print(seen)
+                unique_profiles.append(visit)
+
+            if len(unique_profiles) == 5:
+                break
+        serializer = RecentVisitsSerializer(unique_profiles,  many=True)
         return Response(serializer.data)
 
 
@@ -135,3 +164,18 @@ class RemoveFollower(APIView):
         following = Follow.objects.filter(followers=request.user)
         serializer = FollowersSerializer(following, many=True,  context = {"request": request})
         return Response(serializer.data,status=status.HTTP_201_CREATED)
+
+
+class GetRandomFollowingView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request, username):
+        user = get_object_or_404(User, username=username)
+        # handles the case if the record already exists, then does nothing
+        following = Follow.objects.filter(followers=user)
+        # without many=True, it expects a single object, but its a queryset.
+        # here we already have the follow object, so we directly pass it in the FollowSerializer.
+        serializer = FollowingSerializer(following, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+

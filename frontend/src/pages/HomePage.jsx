@@ -8,12 +8,16 @@ const HomePage = () => {
     const [posts, setPosts] = useState([]);
     const navigate  = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [visitedProfiles, setVisitedProfiles] = useState([]);
+
+
 
     const navigateProfilePage = () => {
     username = axios.get(`${API_BASE_URL}users/getusername/`,{headers: {"Authorization":
     `Bearer ${localStorage.getItem("token")}`}}).then(response => navigate(`/profile/${response.data.username}/`)).
     catch(error => console.error("Error fetching username:", error));
     };
+
 
 
     useEffect(() => {
@@ -29,6 +33,16 @@ const HomePage = () => {
                 }})
             .then(response => setPosts(response.data))
             .catch(error => console.error("Error fetching posts:", error));
+
+      axios.get(`${API_BASE_URL}profile/recentVisits/`,{
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                }})
+            .then(response => {
+      console.log(response);
+      setVisitedProfiles(response.data)})
+            .catch(error => console.error("Error fetching recent visited profiles:", error));
     }, []);
 
     return (
@@ -199,71 +213,20 @@ const HomePage = () => {
     <section class="ml-[340px] w-[630px]">
       <div class="py-4">
         <div class="bg-black  mt-4 rounded-lg ">
-          <div class="flex py-2 justify-between px-4">
-            <div class="text-center">
-              <div class="rounded-full p-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500">
-                <div class="h-14 w-14 rounded-full bg-white wrapper overflow-hidden border-2 border-black">
-                  <img class="w-full h-full object-contain" src="https://randomuser.me/api/portraits/men/1.jpg" alt="" />
-                </div>
-              </div>
-              <p class="text-white text-xs pb-2 pt-1">fulano..</p>
-            </div>
-            <div class="text-center">
-              <div class="rounded-full p-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500">
-                <div class="h-14 w-14 rounded-full bg-white wrapper overflow-hidden border-2 border-black">
-                  <img class="w-full h-full object-contain" src="https://randomuser.me/api/portraits/men/2.jpg" alt="" />
-                </div>
-              </div>
-              <p class="text-white text-xs pb-2 pt-1">fulano..</p>
-            </div>
-            <div class="text-center">
-              <div class="rounded-full p-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500">
-                <div class="h-14 w-14 rounded-full bg-white wrapper overflow-hidden border-2 border-black">
-                  <img class="w-full h-full object-contain" src="https://randomuser.me/api/portraits/men/3.jpg" alt="" />
-                </div>
-              </div>
-              <p class="text-white text-xs pb-2 pt-1">fulano..</p>
-            </div>
-            <div class="text-center">
-              <div class="rounded-full p-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500">
-                <div class="h-14 w-14 rounded-full bg-white wrapper overflow-hidden border-2 border-black">
-                  <img class="w-full h-full object-contain" src="https://randomuser.me/api/portraits/men/4.jpg" alt="" />
-                </div>
-              </div>
-              <p class="text-white text-xs pb-2 pt-1">fulano..</p>
-            </div>
-            <div class="text-center">
-              <div class="rounded-full p-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500">
-                <div class="h-14 w-14 rounded-full bg-white wrapper overflow-hidden border-2 border-black">
-                  <img class="w-full h-full object-contain" src="https://randomuser.me/api/portraits/men/5.jpg" alt="" />
-                </div>
-              </div>
-              <p class="text-white text-xs pb-2 pt-1">fulano..</p>
-            </div>
-            <div class="text-center">
-              <div class="rounded-full p-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500">
-                <div class="h-14 w-14 rounded-full bg-white wrapper overflow-hidden border-2 border-black">
-                  <img class="w-full h-full object-contain" src="https://randomuser.me/api/portraits/men/6.jpg" alt="" />
-                </div>
-              </div>
-              <p class="text-white text-xs pb-2 pt-1">fulano..</p>
-            </div>
-            <div class="text-center">
-              <div class="rounded-full p-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500">
-                <div class="h-14 w-14 rounded-full bg-white wrapper overflow-hidden border-2 border-black">
-                  <img class="w-full h-full object-contain" src="https://randomuser.me/api/portraits/men/7.jpg" alt="" />
-                </div>
-              </div>
-              <p class="text-white text-xs pb-2 pt-1">fulano..</p>
-            </div>
-            <div class="text-center">
-              <div class="rounded-full p-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500">
-                <div class="h-14 w-14 rounded-full bg-white wrapper overflow-hidden border-2 border-black">
-                  <img class="w-full h-full object-contain" src="https://randomuser.me/api/portraits/men/8.jpg" alt="" />
-                </div>
-              </div>
-              <p class="text-white text-xs pb-2 pt-1">fulano..</p>
-            </div>
+          <div  onClick={() => navigateProfilePage(user.username)} class="flex py-2 justify-between px-4">
+            {
+                visitedProfiles.map((visitedProfile) => (
+
+                          <div onclass="text-center">
+                            <div class="rounded-full p-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500">
+                              <div class="h-14 w-14 rounded-full bg-white wrapper overflow-hidden border-2 border-black">
+                                <img class="w-full h-full object-contain" src="https://randomuser.me/api/portraits/men/1.jpg" alt="" />
+                              </div>
+                            </div>
+                            <p class="text-white text-xs pb-2 pt-1">{visitedProfile.username}</p>
+                          </div>
+                      )) 
+            }
           </div>
         </div>
       </div>

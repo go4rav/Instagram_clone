@@ -32,5 +32,16 @@ class Follow(models.Model):
     class Meta:
         unique_together = ('followers', 'following')
 
-    def __str__(self):
-        return f"{self.user_id.username} profile."
+
+class RecentProfileVisit(models.Model):
+    visitor = models.ForeignKey(User, on_delete=models.CASCADE)
+    visited_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="profile_visits"
+    )
+    visited_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('visitor', 'visited_user', 'visited_at')
+

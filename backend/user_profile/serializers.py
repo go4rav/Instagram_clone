@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import Follow, UserProfile
-from .models import Follow
+from .models import Follow, UserProfile, RecentProfileVisit
 from posts.serializers import PostSerializer
 
 
@@ -117,15 +116,12 @@ class FollowingSerializer(serializers.ModelSerializer):
         return Follow.objects.filter(followers=request.user, following=obj.following).exists()
 
 
-# class AddProfileSerializer(serializers.ModelSerializer):\
-#
-#
-#     class Meta:
-#         model = UserProfile
-#         fields = ['id', 'user_id', 'user_name', 'display_profile', 'bio', 'total_posts',
-#                   'followers', 'following', 'posts']
+class RecentVisitsSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source="visited_user.username")
+    display_profile = serializers.CharField(source='visited_user.user_profile.display_profile')
+    class Meta:
+        model = RecentProfileVisit
+        fields = ['username', 'display_profile']
 
 
 # def create(self, data):
-
-

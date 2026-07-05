@@ -2,7 +2,8 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import GetUserProfileInfo, UpdateUserProfileInfo, AddFollower, \
-    DeleteFollower, RemoveFollower, IsFollowingView, FollowersListView, FollowingListView
+    DeleteFollower, RemoveFollower, IsFollowingView, FollowersListView, FollowingListView, GetRandomFollowingView,\
+GetRecentVisitedProfiles
 
 urlpatterns = [
     path('update/', UpdateUserProfileInfo.as_view(), name='profile-update'),
@@ -13,6 +14,7 @@ urlpatterns = [
     path('isfollowing/<str:username>/', IsFollowingView().as_view(), name='isfollowing-view'),
     path('followers/<str:username>/', FollowersListView().as_view(), name='followers-list-view'),
     path('following/<str:username>/', FollowingListView().as_view(), name='following-list-view'),
+    path('recentVisits/', GetRecentVisitedProfiles().as_view(), name='recent-visits-view'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
