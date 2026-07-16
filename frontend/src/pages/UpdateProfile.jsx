@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { isTokenInvalid } from "../utils/tokenUtils";
 import API_BASE_URL from "../config";
 import './SignUpPage.css'
 
@@ -37,7 +38,7 @@ const UpdateProfile= () => {
         const token = localStorage.getItem("token");
 
         // If already logged in → go home
-        if (!token || isTokenExpired(token)) {
+        if (!token || isTokenInvalid(token)) {
             navigate("/login");
         }
 

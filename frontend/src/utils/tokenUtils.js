@@ -1,4 +1,4 @@
-export const isTokenExpired = (token) => {
+export const isTokenInvalid = (token) => {
 
     if (!token) return true;
 

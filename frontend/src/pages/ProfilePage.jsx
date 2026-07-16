@@ -8,6 +8,10 @@ import './ProfilePage.css'
 import logo from "../assets/logo.png"
 import { jwtDecode } from "jwt-decode";
 import FollowersModal from "../components/FollowlistModal.jsx"
+import ErrorPage from "../components/errorPage.jsx"
+import { isTokenInvalid } from "../utils/tokenUtils";
+
+
 
 const ProfilePage = () => {
 
@@ -25,6 +29,7 @@ const ProfilePage = () => {
     const [modalType, setModalType] = useState('followers');
     const [loggedUser, setLoggedUser] = useState('');
     const [render, setRender] = useState(false);
+    const [profileNotFound, setProfileNotFound] = useState(false);
 
 //  When there is a change in the isFollowing state variable,
 // 1. Re-run component function ✅
@@ -55,6 +60,10 @@ const ProfilePage = () => {
       
     useEffect(() => {
         const token = localStorage.getItem("token");
+// If already logged in → go home
+if (!token || isTokenInvalid(token)) {
+    navigate("/login");
+}
         axios.get(`${API_BASE_URL}users/getusername/`,{headers: {"Authorization":
     `Bearer ${localStorage.getItem("token")}`}}).then(response => {
       console.log(response);
@@ -83,7 +92,13 @@ const ProfilePage = () => {
                                setCountFollowers(response.data.count_followers);
                                setCountFollowing(response.data.count_following);
                                setIsOwner(response.data.is_owner)})
-            .catch(error => console.error("Error fetching posts:", error));
+            .catch(error => {
+
+               if (error.response?.status === 404) {
+                setProfileNotFound(true);
+            }
+
+            console.error("Error fetching posts:", error);});
 
         if(render){
           axios.get(`${API_BASE_URL}profile/isfollowing/${username}`, {
@@ -98,7 +113,9 @@ const ProfilePage = () => {
 
 
   return (
-      <><nav className="bg-black w-screen h-[50px] border-b border-[hsl(0,0%,86%)] fixed z-1">
+     profileNotFound ? <ErrorPage/>  : 
+    
+      (<><nav className="bg-black w-screen h-[50px] border-b border-[hsl(0,0%,86%)] fixed z-1">
       <div className="mock"></div>
       <div className="fixed">
         <div className="nav-content ml-40">
@@ -173,22 +190,58 @@ const ProfilePage = () => {
         </div>
 
         {/* Posts Grid */}
-        <div className="w-2/3 h-3/5 grid grid-cols-3 border-t border-[hsl(0,0%,86%)]">
-          {posts.map((post, i) => (
-            <div
-              key={i}
-              className="border border-black bg-gray-200 h-[200px]"
-            ><img src={logo} alt="post" className="img-fit" /></div>
-          ))}
-          {posts.length<4 && Array.from({length: 4-posts.length}).map((_, j)=>(
-            <div key={`placeholder-${j}`}
-              className="bg-black-200 h-[200px]"
-                ></div>
-          ))}
-        </div>
+        {isOwner || isFollowing ? (
+  <div className="w-2/3 h-3/5 grid grid-cols-3 border-t border-[hsl(0,0%,86%)]">
+    {posts.map((post, i) => (
+      <div
+        key={i}
+        className="border border-black bg-gray-200 h-[200px]"
+      >
+        <img src={logo} alt="post" className="img-fit" />
+      </div>
+    ))}
+
+    {posts.length < 4 &&
+      Array.from({ length: 4 - posts.length }).map((_, j) => (
+        <div
+          key={`placeholder-${j}`}
+          className="bg-black-200 h-[200px]"
+        />
+      ))}
+  </div>
+) : (
+  <div className="w-2/3 border-t border-[hsl(0,0%,86%)] flex flex-col items-center justify-center py-20">
+    <div className="w-20 h-20 rounded-full border-2 border-white flex items-center justify-center">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="38"
+        height="38"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        className="text-white"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M16 11V8a4 4 0 10-8 0v3M7 11h10a1 1 0 011 1v7a1 1 0 01-1 1H7a1 1 0 01-1-1v-7a1 1 0 011-1z"
+        />
+      </svg>
+    </div>
+
+    <h2 className="text-white text-3xl font-bold mt-6">
+      This profile is private
+    </h2>
+
+    <p className="text-gray-400 text-center mt-2">
+      Follow to see their photos and videos.
+    </p>
+  </div>
+)}
       </div></>
 
-  );
-}
+   ) );}
+
 
 export default ProfilePage

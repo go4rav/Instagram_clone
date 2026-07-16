@@ -3,29 +3,46 @@ import axios from "axios";
 import API_BASE_URL from "../config";
 import { useNavigate } from "react-router-dom";
 import UploadPostModal from "../components/UploadPostModal.jsx"
+import PostList from "../components/PostList";
+import { isTokenInvalid } from "../utils/tokenUtils";
 
 const HomePage = () => {
     const [posts, setPosts] = useState([]);
     const navigate  = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [visitedProfiles, setVisitedProfiles] = useState([]);
+    const [profileSuggestions, setProfileSuggestions] = useState([]);
+    const [loggedUser, setLoggedUser] = useState('');
 
 
+    const navigateProfilePage = (username) => {
 
-    const navigateProfilePage = () => {
-    username = axios.get(`${API_BASE_URL}users/getusername/`,{headers: {"Authorization":
-    `Bearer ${localStorage.getItem("token")}`}}).then(response => navigate(`/profile/${response.data.username}/`)).
-    catch(error => console.error("Error fetching username:", error));
+      navigate(`/profile/${username}/`)
+
     };
 
 
+    const handleSignOut = () => {
+          localStorage.removeItem("token");
+          localStorage.removeItem("refreshToken");
+
+          navigate("/login");
+      };
+
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) {
-            navigate("/login");
-            return;
-        }
+    const token = localStorage.getItem("token");
+    // If already logged in → go home
+    if (!token || isTokenInvalid(token)) {
+        navigate("/login");
+    }
+
+
+        axios.get(`${API_BASE_URL}users/getusername/`,{headers: {"Authorization":
+    `Bearer ${localStorage.getItem("token")}`}}).then(response => {
+      console.log(response);
+      setLoggedUser(response.data.username)});
+
         axios.get(`${API_BASE_URL}posts/`,{
                 headers: {
                     "Content-Type": "multipart/form-data",
@@ -40,9 +57,18 @@ const HomePage = () => {
                     "Authorization": `Bearer ${localStorage.getItem("token")}`
                 }})
             .then(response => {
-      console.log(response);
       setVisitedProfiles(response.data)})
             .catch(error => console.error("Error fetching recent visited profiles:", error));
+
+      axios.get(`${API_BASE_URL}profile/suggestions/`,{
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                }})
+            .then(response => {
+      console.log(response);
+      setProfileSuggestions(response.data)})
+            .catch(error => console.error("Error fetching profile suggestions:", error));      
     }, []);
 
     return (
@@ -88,21 +114,35 @@ const HomePage = () => {
               </li>
             </button>
           </div>
-          <div class="flex cursor-pointer rounded-3xl py-2 active:font-semibold hover:bg-gray-50 hover:bg-opacity-10">
-            <button>
-              <li class="pl-3 flex">
-                <svg aria-label="Explore" class="_ab6-" color="#fafafa" fill="#fafafa" height="24" role="img"
-                  viewBox="0 0 24 24" width="24">
-                  <polygon fill="none" points="13.941 13.953 7.581 16.424 10.06 10.056 16.42 7.585 13.941 13.953"
-                    stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></polygon>
-                  <polygon fill-rule="evenodd" points="10.06 10.056 13.949 13.945 7.581 16.424 10.06 10.056"></polygon>
-                  <circle cx="12.001" cy="12.005" fill="none" r="10.5" stroke="currentColor" stroke-linecap="round"
-                    stroke-linejoin="round" stroke-width="2"></circle>
-                </svg>
-                <p class="ml-4 font-sans text-[16px]">Explorer</p>
-              </li>
-            </button>
-          </div>
+          <div className="flex cursor-pointer rounded-3xl py-2 active:font-semibold hover:bg-gray-50 hover:bg-opacity-10">
+  <button onClick={() => navigate("/updateprofile")}>
+    <li className="pl-3 flex">
+      <svg
+        aria-label="Edit Profile"
+        color="#fafafa"
+        fill="none"
+        height="24"
+        width="24"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M4 20h4l10-10a2.12 2.12 0 0 0-3-3L5 17v3z"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M13.5 6.5l4 4"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+      <p className="ml-4 text-[16px] font-sans">Edit Profile</p>
+    </li>
+  </button>
+</div>
           <div class="flex cursor-pointer rounded-3xl py-2  active:font-semibold hover:bg-gray-50 hover:bg-opacity-10">
             <button>
               <li class="pl-3 flex">
@@ -193,10 +233,49 @@ const HomePage = () => {
 
           <div class="cursor-pointer  flex  rounded-3xl mb-20 py-2 active:font-semibold hover:bg-gray-50 hover:bg-opacity-10">
             <img class="w-7 h-7 ml-2 rounded-full " src="https://avatars.githubusercontent.com/u/26464462?v=4" alt="" />
-            <button onClick = {navigateProfilePage}>
+            <button onClick ={ ()=> navigateProfilePage(loggedUser)}>
               <li class="pl-4">Profile</li>
             </button>
           </div>
+          <div className="flex cursor-pointer rounded-3xl py-2 active:font-semibold hover:bg-gray-50 hover:bg-opacity-10">
+  <button onClick ={handleSignOut}>
+    <li className="pl-3 flex">
+      <svg
+        aria-label="Sign Out"
+        color="#fafafa"
+        fill="none"
+        height="24"
+        width="24"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <polyline
+          points="16 17 21 12 16 7"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <line
+          x1="21"
+          y1="12"
+          x2="9"
+          y2="12"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+      <p className="ml-4 text-[16px] font-sans">Sign Out</p>
+    </li>
+  </button>
+</div>
         </ul>
       </nav>
       <div class="flex cursor-pointer mt-[75px] text-xl rounded-3xl py-2 hover:bg-gray-50 hover:bg-opacity-10">
@@ -212,79 +291,32 @@ const HomePage = () => {
     </section>
     <section class="ml-[340px] w-[630px]">
       <div class="py-4">
-        <div class="bg-black  mt-4 rounded-lg ">
-          <div  onClick={() => navigateProfilePage(user.username)} class="flex py-2 justify-between px-4">
-            {
-                visitedProfiles.map((visitedProfile) => (
-
-                          <div onclass="text-center">
-                            <div class="rounded-full p-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500">
-                              <div class="h-14 w-14 rounded-full bg-white wrapper overflow-hidden border-2 border-black">
-                                <img class="w-full h-full object-contain" src="https://randomuser.me/api/portraits/men/1.jpg" alt="" />
-                              </div>
+            <div className="bg-black mt-4 rounded-lg flex overflow-x-auto px-4 py-3 space-x-4 scrollbar-hide">
+                {visitedProfiles.map((visitedProfile) => (
+                    <div
+                        key={visitedProfile.username}
+                        onClick={() => navigateProfilePage(visitedProfile.username)}
+                        className="flex-shrink-0 text-center cursor-pointer"
+                    >
+                        <div className="rounded-full p-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500">
+                            <div className="h-14 w-14 rounded-full bg-white overflow-hidden border-2 border-black">
+                                <img
+                                    className="w-full h-full object-cover"
+                                    src={visitedProfile.display_profile}
+                                    alt={visitedProfile.username}
+                                />
                             </div>
-                            <p class="text-white text-xs pb-2 pt-1">{visitedProfile.username}</p>
-                          </div>
-                      )) 
-            }
+                        </div>
+
+                        <p className="text-white text-xs mt-1 w-14 truncate">
+                            {visitedProfile.username}
+                        </p>
+                    </div>
+                ))}
           </div>
-        </div>
       </div>
-      <div class="bg-black rounded-lg">
-        <div class="mb-4">
-          <div class="flex flex-row items-center text-center gap-2">
-            <div class="w-11 h-11 rounded-full p-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500">
-              <div class="h-10 w-10 rounded-full bg-white wrapper overflow-hidden border-2 border-black">
-                <img class="w-full h-full object-contain" src="https://randomuser.me/api/portraits/men/1.jpg" alt="" />
-              </div>
-            </div>
-            <p class="text-white text-sm font-semibold pb-2 pt-1">fulanodetal</p>
-          </div>
-          <div></div>
-        </div>
-        <div>
-          <div>
-            <img class="w-[100%]" src="src/assets/post.jpg" alt="" />
-          </div>
-        </div>
-        <div>
-          <div class="pt-3 pb-2">
-            <ul class="text-white text-xl flex space-x-8">
-              <li>
-                <i class="fa-regular fa-heart cursor-pointer hover:text-gray-300"></i>
-              </li>
-              <li>
-                <i class="fa-regular fa-comments cursor-pointer hover:text-gray-300"></i>
-              </li>
-              <li>
-                <i class="fa-regular fa-paper-plane cursor-pointer hover:text-gray-300"></i>
-              </li>
-              <li>
-                <i class="fa-regular fa-bookmark  cursor-pointer hover:text-gray-300"></i>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div class=" pt-1 pb-2 space-y-1 text-sm">
-          <div>
-            <p class="font-semibold text-white cursor-pointer">37,103 likes</p>
-          </div>
-          <div>
-            <p class="text-white cursor-pointer">Life has no meaning :)</p>
-          </div>
-          <div>
-            <p class="text-gray-500 cursor-pointer">View all 400 comments</p>
-          </div>
-        </div>
-        <div class="flex flex-row justify-between py-3 space-x-3">
-          <div class="">
-            <p class="text-gray-400 text-sm">Add a comment...</p>
-          </div>
-          <button class="text-blue-400 ml-[264px] font-semibold cursor-pointer">
-            Publicar
-          </button>
-        </div>
-      </div>
+      <PostList/>
+      
     </section>
     <section class="absolute w-[400px] ml-[1050px] top-[30px] rounded-lg">
       <div class="py-3 flex space-x-3">
@@ -308,73 +340,20 @@ const HomePage = () => {
         </div>
       </div>
       <div class="space-y-2">
-        <div class="flex space-x-3">
-          <img class="w-[30px] h-[30px] rounded-full mt-2" src="https://randomuser.me/api/portraits/men/1.jpg" alt="" />
-          <div class="">
-            <p class="text-white cursor-pointer">fulano</p>
-            <p class="text-xs w-max text-gray-500">
-              Followed by suodrifabeal + 12 more
-            </p>
-          </div>
-          <div>
-            <p class="ml-[100px] text-sm text-blue-500 cursor-pointer">
-              Seguir
-            </p>
-          </div>
+        {
+              profileSuggestions.map((profileSuggestion) => (
+                <div onClick ={ () => navigateProfilePage(profileSuggestion.username)} class="flex space-x-3">
+                    <img class="w-[30px] h-[30px] rounded-full mt-2"  src={profileSuggestion.display_profile}
+                                    alt={profileSuggestion.username} />
+                    <div class="">
+                      <p class="text-white cursor-pointer">{profileSuggestion.username}</p>
+                      <p class="text-xs w-max text-gray-500">
+                        {profileSuggestion.full_name}
+                      </p>
+                    </div>
+                 </div> ))
+        } 
         </div>
-        <div class="flex space-x-3">
-          <img class="w-[30px] h-[30px] rounded-full mt-2" src="https://randomuser.me/api/portraits/men/1.jpg" alt="" />
-          <div class="">
-            <p class="text-white cursor-pointer">fulano</p>
-            <p class="text-xs w-max text-gray-500">
-              Followed by _.adityasinghrajput._ + 6 m
-            </p>
-          </div>
-          <div>
-            <p class="ml-[82px] text-sm text-blue-500 cursor-pointer">
-              Seguir
-            </p>
-          </div>
-        </div>
-        <div class="flex space-x-3">
-          <img class="w-[30px] h-[30px] rounded-full mt-2" src="https://randomuser.me/api/portraits/men/1.jpg" alt="" />
-          <div class="">
-            <p class="text-white cursor-pointer">fulano</p>
-            <p class="text-xs w-max text-gray-500">
-              Followed by _.adityasinghrajput._ + 7 m
-            </p>
-          </div>
-          <div>
-            <p class="ml-[82px] text-sm text-blue-500 cursor-pointer">
-              Seguir
-            </p>
-          </div>
-        </div>
-        <div class="flex space-x-3">
-          <img class="w-[30px] h-[30px] rounded-full mt-2" src="https://randomuser.me/api/portraits/men/1.jpg" alt="" />
-          <div class="items-center">
-            <p class="text-white cursor-pointer">fulano</p>
-            <p class="text-xs w-max text-gray-500">
-              Followed by vanditanandal + 3 more
-            </p>
-          </div>
-          <div>
-            <p class="ml-[96px] text-sm text-blue-500 cursor-pointer">
-              Seguir
-            </p>
-          </div>
-        </div>
-        <div class="flex space-x-3">
-          <img class="w-[30px] h-[30px] rounded-full mt-2" src="https://randomuser.me/api/portraits/men/1.jpg" alt="" />
-          <div class="">
-            <p class="text-white cursor-pointer">fulano</p>
-            <p class="text-xs min-w-full text-gray-500">Suggested for you</p>
-          </div>
-          <div>
-            <p class="ml-[188px] text-sm text-blue-500">Seguir</p>
-          </div>
-        </div>
-      </div>
       <div class="py-4 space-y-2 text-gray-500">
         <footer>
           <ul class="flex space-x-2 text-sm pt-3">

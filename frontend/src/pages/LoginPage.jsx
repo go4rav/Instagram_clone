@@ -1,5 +1,5 @@
 import React, { useState, useEffect} from "react";
-import { isTokenExpired } from "../utils/tokenUtils";
+import { isTokenInvalid } from "../utils/tokenUtils";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import './LoginPage.css'
@@ -31,8 +31,8 @@ const LoginPage = () => {
         const token = localStorage.getItem("token");
 
         // If already logged in → go home
-        if (token && !isTokenExpired(token)) {
-            navigate("/");
+        if (token && !isTokenInvalid(token)) {
+            navigate("/login");
         }
 
     }, [navigate]);

@@ -3,7 +3,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 from rest_framework.views import APIView
 from .models import UserProfile , User, Follow, RecentProfileVisit
-from .serializers import UserProfileSerializer, FollowersSerializer, FollowingSerializer, RecentVisitsSerializer
+from .serializers import UserProfileSerializer, FollowersSerializer, FollowingSerializer, UserSummarySerializer
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
@@ -19,8 +19,11 @@ class GetUserProfileInfo(APIView):
             visited_user = get_object_or_404(User, username=username)
             if visited_user!=request.user:
                 RecentProfileVisit.objects.create(visitor = request.user , visited_user = visited_user )
-        except UserProfile.DoesNotExist:
-            return Response({"error": "User profile not found"}, status=status.HTTP_404_NOT_FOUND)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
         serializer = UserProfileSerializer(profile, context = {"request": request, "user": user })
         return Response(serializer.data)
 
@@ -36,19 +39,36 @@ class GetRecentVisitedProfiles(APIView):
             .order_by("-visited_at")
         )
 
-        unique_profiles = []
         seen = set()
 
         for visit in recent_visits:
             if visit.visited_user_id not in seen:
-                seen.add(visit.visited_user_id)
-                print(seen)
-                unique_profiles.append(visit)
+                # adding a User object.
+                seen.add(visit.visited_user)
 
-            if len(unique_profiles) == 5:
+            if len(seen) == 5:
                 break
-        serializer = RecentVisitsSerializer(unique_profiles,  many=True)
+        serializer = UserSummarySerializer(list(seen),  many=True)
         return Response(serializer.data)
+
+
+class GetUserSuggestions(APIView):
+
+    def get(self, request):
+        following_ids = Follow.objects.filter(
+            followers=request.user
+        ).values_list("following_id", flat=True)
+
+        users = User.objects.exclude(
+            id__in=following_ids
+        ).exclude(
+            id=request.user.id
+        ).order_by("?")[:5]
+
+        serializer = UserSummarySerializer(users, many=True)
+        return Response(serializer.data)
+
+
 
 
 class UpdateUserProfileInfo(APIView):
@@ -178,4 +198,3 @@ class GetRandomFollowingView(APIView):
         # here we already have the follow object, so we directly pass it in the FollowSerializer.
         serializer = FollowingSerializer(following, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
-

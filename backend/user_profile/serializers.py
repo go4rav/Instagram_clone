@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Follow, UserProfile, RecentProfileVisit
+from .models import Follow, UserProfile, RecentProfileVisit, User
 from posts.serializers import PostSerializer
 
 
@@ -104,7 +104,7 @@ class FollowingSerializer(serializers.ModelSerializer):
     # related name as user_profile, you can get the user_profile data for that User instance, and from all the
     # User_profile data, you read the full_name
     full_name = serializers.CharField(source='following.user_profile.full_name')
-    display_profile = serializers.CharField(source='following.user_profile.display_profile')
+    display_profile = serializers.ImageField(source='following.user_profile.display_profile')
     class Meta:
         model = Follow
         fields = ['id', 'username', 'full_name', 'display_profile', 'is_following']
@@ -116,12 +116,15 @@ class FollowingSerializer(serializers.ModelSerializer):
         return Follow.objects.filter(followers=request.user, following=obj.following).exists()
 
 
-class RecentVisitsSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source="visited_user.username")
-    display_profile = serializers.CharField(source='visited_user.user_profile.display_profile')
+class UserSummarySerializer(serializers.ModelSerializer):
+    # ***IMPORTANT***
+    # what this does.
+    # obj.user_profile.display_profile where obj is the user object
+    display_profile = serializers.ImageField(source='user_profile.display_profile')
+    fullname = serializers.CharField(source = 'user_profile.full_name')
     class Meta:
-        model = RecentProfileVisit
-        fields = ['username', 'display_profile']
+        model = User
+        fields = ['username', 'fullname', 'display_profile']
 
 
 # def create(self, data):
