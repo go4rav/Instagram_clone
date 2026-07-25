@@ -1,5 +1,5 @@
 import React, { useState, useEffect} from "react";
-import { isTokenInvalid } from "../utils/tokenUtils";
+import validateRefreshToken from "../utils/tokenUtils";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import './LoginPage.css'
@@ -13,11 +13,12 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${API_BASE_URL}users/login/`, {
+      const response = await axios.post(`${API_BASE_URL}/users/login/`, {
         username,
         password,
       });
       localStorage.setItem("token", response.data.access);
+      localStorage.setItem("refresh", response.data.refresh);
       navigate("/");
     } catch (error) {
       alert("Invalid credentials");
@@ -28,13 +29,21 @@ const LoginPage = () => {
 
   useEffect(() => {
 
-        const token = localStorage.getItem("token");
+       const checkToken = async () => {
+
+        const accesstoken = localStorage.getItem("token");
+        const refreshtoken = localStorage.getItem("refresh");
 
         // If already logged in → go home
-        if (token && !isTokenInvalid(token)) {
-            navigate("/login");
+        const isValid = await validateRefreshToken(accesstoken, refreshtoken, navigate);
+        if (isValid) {
+           console.log("Is valid token")
+            navigate("/");
         }
 
+       }
+
+       checkToken();
     }, [navigate]);
 
   const navigateSignUp = () => {

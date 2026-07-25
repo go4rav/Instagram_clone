@@ -1,18 +1,24 @@
 from rest_framework import generics, permissions
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Post
-from .serializers import PostSerializer
+from .serializers import PostListSerializer, PostCreateSerializer
 from user_profile.models import Follow
 
 # List all posts & Create new post
 class PostListCreateView(generics.ListCreateAPIView):
-    serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]  # For image uploads
 
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return PostListSerializer
+        elif self.request.method == "POST":
+            return PostCreateSerializer
+
+
     def get_queryset(self):
         following_users = Follow.objects.filter(followers=self.request.user).values_list("following", flat=True)
-        return Post.objects.filter(author__in=following_users).order_by("?")  # Allow only owners to delete
+        return Post.objects.filter(author__in=following_users).order_by("-created_at")  # Allow only owners to delete
 
 
     def perform_create(self, serializer):
@@ -34,7 +40,7 @@ class PostListCreateView(generics.ListCreateAPIView):
 # Post.objects.filter(author=request.user).get(pk=pk_from_url)
 class PostDeleteView(generics.DestroyAPIView):
     queryset = Post.objects.all()
-    serializer_class = PostSerializer
+    serializer_class = PostCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):

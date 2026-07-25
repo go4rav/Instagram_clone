@@ -2,20 +2,25 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import API_BASE_URL from "../config";
 import { useNavigate } from "react-router-dom";
-import { isTokenInvalid } from "../utils/tokenUtils";
+import  validateRefreshToken from "../utils/tokenUtils";
 
 const PostList = () => {
     const [posts, setPosts] = useState([]);
     const navigate  = useNavigate();
 
     useEffect(() => {
-         const token = localStorage.getItem("token");
-        // If already logged in → go home
-        if (!token || isTokenInvalid(token)) {
-            navigate("/login");
+        const checkToken = async () => {
+            const accesstoken = localStorage.getItem("token");
+            const refreshtoken = localStorage.getItem("refresh");
+                const isValid = await validateRefreshToken(accesstoken, refreshtoken, navigate);
+                if (!isValid) {
+                    navigate("/login");
+                }
+
         }
         
-        axios.get(`${API_BASE_URL}posts/`,{
+        checkToken();
+        axios.get(`${API_BASE_URL}/posts/`,{
                 headers: {
                     "Content-Type": "multipart/form-data",
                     "Authorization": `Bearer ${localStorage.getItem("token")}`
@@ -31,7 +36,7 @@ const PostList = () => {
             {posts.map(post => (
             <div class="bg-black rounded-lg">
             <div class="mb-4">
-            <div class="flex flex-row items-center text-center gap-2">
+            <div onClick ={ () => navigate(`/profile/${post.author}/`)} class="cursor-pointer flex flex-row items-center text-center gap-2">
                 <div class="w-11 h-11 rounded-full p-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500">
                 <div class="h-10 w-10 rounded-full bg-white wrapper overflow-hidden border-2 border-black">
                     <img class="w-full h-full object-contain" src={post.display_profile}  alt="Post" />
@@ -69,7 +74,7 @@ const PostList = () => {
                 <p class="font-semibold text-white cursor-pointer">37,103 likes</p>
             </div>
             <div>
-                <p class="text-white cursor-pointer">Life has no meaning :)</p>
+                <p class="text-white cursor-pointer">{post.caption}</p>
             </div>
             <div>
                 <p class="text-gray-500 cursor-pointer">View all 400 comments</p>

@@ -1,73 +1,84 @@
-/* Full-screen overlay */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+/* Overall page layout */
+.add_post-page {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    height: 100vh;
+    background-color: #fafafa;
+    font-family: Arial, sans-serif;
 }
 
-/* White modal box */
-.modal-box {
-    background: #3B3B3B;
-    padding: 20px;
+/* add_post container box */
+.add_post-container {
+    background-color: white;
     width: 350px;
-    border-radius: 8px;
-    position: relative;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    padding: 40px 40px 30px;
+    border: 1px solid #dbdbdb;
+    border-radius: 6px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    align-items: center;
 }
 
-/* Close button (X) */
-.modal-close {
-    position: absolute;
-    top: 8px;
-    right: 12px;
-    background: none;
-    border: none;
-    font-size: 22px;
-    cursor: pointer;
-    color:  #969696;
+/* Instagram-like title */
+.add_post-container h1 {
+    font-family: 'Billabong', cursive; /* Instagram-style font */
+    font-size: 48px;
+    color: #262626;
+    margin-bottom: 20px;
 }
 
-.modal-title {
-    text-align: center;
-    font-size: 18px;
-    font-weight: bold;
-}
-
-.modal-form input[type="file"],
-.modal-form textarea {
+/* add_post form layout */
+.add_post-form {
+    display: flex;
+    flex-direction: column;
     width: 100%;
-    padding: 8px;
+    gap: 10px;
+}
+
+/* Input styling */
+.add_post-form input {
+    padding: 10px;
     border: 1px solid #dbdbdb;
     border-radius: 4px;
+    background-color: #fafafa;
     font-size: 14px;
-    resize: none;
 }
 
-.modal-form button {
+/* Focus effect */
+.add_post-form input:focus {
+    outline: none;
+    border-color: #a8a8a8;
+}
+
+/* Button styling */
+.add_post-form button {
     background-color: #0095f6;
     color: white;
-    padding: 10px;
+    padding: 8px 0;
     border: none;
     border-radius: 4px;
     font-weight: bold;
     cursor: pointer;
 }
 
-.modal-form button:hover {
+.add_post-form button:hover {
     background-color: #0077c2;
 }
 
+/* Sign up text */
+.add_post-text {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #8e8e8e;
+}
 
-.caption{
-    background-color : #525252
+.add_post-text a {
+    color: #0095f6;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.add_post-text a:hover {
+    text-decoration: underline;
 }

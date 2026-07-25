@@ -17,14 +17,13 @@ const SignUpPage = () => {
              {
                throw new Error("Passwords do not match");
              }
-            const response = await axios.post(`${API_BASE_URL}users/signup/`, {
+            const response = await axios.post(`${API_BASE_URL}/users/signup/`, {
                 username,
                 password,
             });
             console.log(response);
             localStorage.setItem("token", response.data.access);
-
-             navigate(`/login`); // go to login page
+            navigate(`/login`); // go to login page
         } catch (error) {
             alert(`Sign up failed! ${error.message}`);
             console.error(error);

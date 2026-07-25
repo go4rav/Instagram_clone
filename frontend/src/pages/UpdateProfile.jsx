@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { isTokenInvalid } from "../utils/tokenUtils";
+import validateRefreshToken from "../utils/tokenUtils";
 import API_BASE_URL from "../config";
 import './SignUpPage.css'
 
 const UpdateProfile= () => {
     const [bio, setBio] = useState("");
-    const [fullname, setFullname] = useState("");
+    const [fullname, setFullName] = useState("");
     const [profilePicture, setProfilePicture] = useState("");
     const navigate = useNavigate();
 
@@ -18,7 +18,7 @@ const UpdateProfile= () => {
             formData.append("user_name", fullname);
             formData.append("bio", bio);
             formData.append("display_profile", profilePicture);
-            const response = await axios.post(`${API_BASE_URL}profile/update/`,
+            const response = await axios.post(`${API_BASE_URL}/profile/update/`,
                 formData,{
                 headers: {
                     "Content-Type": "multipart/form-data",
@@ -26,7 +26,7 @@ const UpdateProfile= () => {
                 }});
             console.log("Profile updated")
             console.log(response);
-            navigate("/login");  // Go to feed
+            navigate("/");  // Go to feed
         } catch (error) {
 //             alert("Profile Update failed!");
             console.error(error);
@@ -35,12 +35,28 @@ const UpdateProfile= () => {
 
     useEffect(() => {
 
-        const token = localStorage.getItem("token");
+        const checkToken = async () => {
+            const accesstoken = localStorage.getItem("token");
+            const refreshtoken = localStorage.getItem("refresh");
 
-        // If already logged in → go home
-        if (!token || isTokenInvalid(token)) {
-            navigate("/login");
+            // If already logged in → go home
+            const isValid = await validateRefreshToken(accesstoken, refreshtoken, navigate);
+            if (!isValid) {
+                navigate("/login");
+            }
         }
+
+        checkToken();
+
+        axios.get(`${API_BASE_URL}/profile/getProfileSummary`, {headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`}}).then(response =>
+          { 
+            setFullName(response.data.full_name);
+            setBio(response.data.bio);
+            setProfilePicture(response.data.display_profile);})
+             
+          .catch(error=> console.error("Error fetch user summary details", error));
+
 
     }, [navigate]);
 
@@ -54,7 +70,7 @@ const UpdateProfile= () => {
                     placeholder="Full Name"
                     id="full_name"
                     value={fullname}
-                    onChange={(e) => setFullname(e.target.value)}
+                    onChange={(e) => setFullName(e.target.value)}
                     required
                 />
 
@@ -68,8 +84,7 @@ const UpdateProfile= () => {
 
                 <input
                     type="file"
-                    onChange={(e) => setProfilePicture(e.target.value)}
-                    required
+                    onChange={(e) => setProfilePicture(e.target.files[0])}
                 />
                 <button type="submit">Update</button>
             </form>

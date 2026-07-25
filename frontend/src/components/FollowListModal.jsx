@@ -19,7 +19,6 @@ const FollowersModal = ({
     const navigate  = useNavigate();
     const navigateProfilePage = async (user_name) =>{
         onClose();
-        console.log(user_name);
         // await sleep(1);
         navigate(`/profile/${user_name}/`);
     };
@@ -27,7 +26,7 @@ const FollowersModal = ({
     const followUser = async (user_name) => {
     try {
        const token = localStorage.getItem("token");
-            await axios.post(`${API_BASE_URL}profile/follow/${user_name}/`, {}, {
+            await axios.post(`${API_BASE_URL}/profile/follow/${user_name}/`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setChange(!change);

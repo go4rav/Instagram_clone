@@ -3,7 +3,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 from rest_framework.views import APIView
 from .models import UserProfile , User, Follow, RecentProfileVisit
-from .serializers import UserProfileSerializer, FollowersSerializer, FollowingSerializer, UserSummarySerializer
+from .serializers import UserProfileSerializer, FollowersSerializer, FollowingSerializer, UserProfileSummarySerializer
+from users.serializers import UserSummarySerializer
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
@@ -27,6 +28,23 @@ class GetUserProfileInfo(APIView):
         serializer = UserProfileSerializer(profile, context = {"request": request, "user": user })
         return Response(serializer.data)
 
+
+class GetUserProfileSummary(APIView):
+
+    def get(self, request):
+        try:
+            # first get the user object associated with this username
+            user = User.objects.get(username=request.user)
+
+            # now filter the profile based on this user.
+            profile = UserProfile.objects.get(user_id=user)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        serializer = UserProfileSummarySerializer(profile)
+        return Response(serializer.data)
 
 class GetRecentVisitedProfiles(APIView):
 
@@ -78,11 +96,12 @@ class UpdateUserProfileInfo(APIView):
     def post(self, request):
         try:
             print(request)
-            user_profile = UserProfile.objects.filter(user_id=request.user).update(
-                user_name = request.data.get('user_name'),
-                bio = request.data.get('bio'),
-                display_profile = request.data.get('display_profile')
-               )
+            profile = UserProfile.objects.get(user_id=request.user)
+            profile.user_name = request.data.get('user_name')
+            profile.bio = request.data.get('bio')
+            if "display_profile" in request.FILES:
+                profile.display_profile = request.FILES["display_profile"]
+            profile.save()
 
         except UserProfile.DoesNotExist:
             return Response({"error": "Error occured while updating profile"}, status=status.HTTP_404_NOT_FOUND)

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Follow, UserProfile, RecentProfileVisit, User
-from posts.serializers import PostSerializer
+from posts.serializers import PostListSerializer
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -16,7 +16,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     # the related_name you set (posts),
     # not the FK field name.
     # this is important, it says get me the posts from the post serialiser for only users with user_id.
-    posts = PostSerializer(many=True, read_only=True, source='user_id.posts')
+    posts = PostListSerializer(many=True, read_only=True, source='user_id.posts')
     # this gives the data of all followers where user id matches with following
     # (it does join automatically with following because related name for following is followers), check models.py
     # followers = FollowSerializer(many=True, read_only=True, source='user_id.followers')
@@ -49,6 +49,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if request and user:
             return request.user.id == user.id
         return False
+
+class UserProfileSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['full_name', 'display_profile', 'bio']
+
 class FollowersSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(
@@ -114,17 +120,6 @@ class FollowingSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         # exists(), highly optimised b-tree, stops searching once found, O(logn) for searching in worst case.
         return Follow.objects.filter(followers=request.user, following=obj.following).exists()
-
-
-class UserSummarySerializer(serializers.ModelSerializer):
-    # ***IMPORTANT***
-    # what this does.
-    # obj.user_profile.display_profile where obj is the user object
-    display_profile = serializers.ImageField(source='user_profile.display_profile')
-    fullname = serializers.CharField(source = 'user_profile.full_name')
-    class Meta:
-        model = User
-        fields = ['username', 'fullname', 'display_profile']
 
 
 # def create(self, data):

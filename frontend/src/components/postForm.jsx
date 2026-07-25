@@ -13,7 +13,7 @@ const PostForm = () => {
         formData.append("caption", caption);
 
         try {
-            await axios.post(`${API_BASE_URL}posts/`, formData
+            await axios.post(`${API_BASE_URL}/posts/`, formData
             , {
                 headers: {
                     "Content-Type": "multipart/form-data",

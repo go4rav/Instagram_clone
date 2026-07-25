@@ -7,7 +7,9 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.generics import RetrieveAPIView
 from rest_framework import status
 from user_profile.models import UserProfile
-from .serializers import UserSerializer, LoginSerializer
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from .serializers import UserSerializer, LoginSerializer, UserSummarySerializer
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -35,6 +37,19 @@ class GetUsernameView(APIView):
         username = request.user.username
         # serializer = UserProfileSerializer(profile)
         return Response({'username': username})
+
+
+class GetUserSummaryView(APIView):
+
+
+        def get(self, request):
+            try:
+                serializer = UserSummarySerializer(request.user)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except User.DoesNotExist:
+                return Response({"error": "User not found"},
+                    status=status.HTTP_404_NOT_FOUND)
+
 
 # class UserProfileView(RetrieveAPIView):
 #     authentication_classes = [JWTAuthentication]

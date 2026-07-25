@@ -4,7 +4,8 @@ import API_BASE_URL from "../config";
 import { useNavigate } from "react-router-dom";
 import UploadPostModal from "../components/UploadPostModal.jsx"
 import PostList from "../components/PostList";
-import { isTokenInvalid } from "../utils/tokenUtils";
+import validateRefreshToken from "../utils/tokenUtils";
+import {BASE_URL} from "../config";
 
 const HomePage = () => {
     const [posts, setPosts] = useState([]);
@@ -13,6 +14,8 @@ const HomePage = () => {
     const [visitedProfiles, setVisitedProfiles] = useState([]);
     const [profileSuggestions, setProfileSuggestions] = useState([]);
     const [loggedUser, setLoggedUser] = useState('');
+    const [displayProfile, setDisplayProfile] = useState(null);
+    const [fullName, setFullName] = useState('');
 
 
     const navigateProfilePage = (username) => {
@@ -31,19 +34,35 @@ const HomePage = () => {
 
 
     useEffect(() => {
-    const token = localStorage.getItem("token");
-    // If already logged in → go home
-    if (!token || isTokenInvalid(token)) {
-        navigate("/login");
+
+    const checkToken = async () => {
+
+      const accesstoken = localStorage.getItem("token");
+      const refreshtoken = localStorage.getItem("refresh");
+      // If already logged in → go home
+      const isValid = await validateRefreshToken(accesstoken, refreshtoken, navigate);
+      if (!isValid) {
+          navigate("/login");
+      }
+
     }
 
+    checkToken();
 
-        axios.get(`${API_BASE_URL}users/getusername/`,{headers: {"Authorization":
+
+        axios.get(`${API_BASE_URL}/users/getusername/`,{headers: {"Authorization":
     `Bearer ${localStorage.getItem("token")}`}}).then(response => {
       console.log(response);
       setLoggedUser(response.data.username)});
+      
 
-        axios.get(`${API_BASE_URL}posts/`,{
+      axios.get(`${API_BASE_URL}/users/get_user_summary/`, {headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`}}).then(response =>
+          { console.log(response);
+            setDisplayProfile(response.data.display_profile);
+             setFullName(response.data.full_name);})
+          .catch(error=> console.error("Error fetch user summary details", error));
+        axios.get(`${API_BASE_URL}/posts/`,{
                 headers: {
                     "Content-Type": "multipart/form-data",
                     "Authorization": `Bearer ${localStorage.getItem("token")}`
@@ -51,7 +70,7 @@ const HomePage = () => {
             .then(response => setPosts(response.data))
             .catch(error => console.error("Error fetching posts:", error));
 
-      axios.get(`${API_BASE_URL}profile/recentVisits/`,{
+      axios.get(`${API_BASE_URL}/profile/recentVisits/`,{
                 headers: {
                     "Content-Type": "multipart/form-data",
                     "Authorization": `Bearer ${localStorage.getItem("token")}`
@@ -60,7 +79,7 @@ const HomePage = () => {
       setVisitedProfiles(response.data)})
             .catch(error => console.error("Error fetching recent visited profiles:", error));
 
-      axios.get(`${API_BASE_URL}profile/suggestions/`,{
+      axios.get(`${API_BASE_URL}/profile/suggestions/`,{
                 headers: {
                     "Content-Type": "multipart/form-data",
                     "Authorization": `Bearer ${localStorage.getItem("token")}`
@@ -75,7 +94,7 @@ const HomePage = () => {
         <body class="bg-gray-200">
     <div class="bg-black">
     <section class="fixed py-6 px-3 bg-black w-[245px] h-[100%] border-r-[1px] border-r-zinc-800">
-      <div class="py-3 px-2">
+      <div onClick ={ () => navigate(`/`)} class="cursor-pointer py-3 px-2">
         <svg aria-label="Instagram" class="_ab6-" color="#fafafa" fill="#fafafa" height="29" role="img"
           viewBox="32 4 113 32" width="103">
           <path clip-rule="evenodd"
@@ -202,7 +221,7 @@ const HomePage = () => {
             </button>
           </div>
           <div class="flex cursor-pointer rounded-3xl py-2 active:font-semibold hover:bg-gray-50 hover:bg-opacity-10 ">
-            <button onClick = {()=>setIsModalOpen(true)}>
+            <button onClick={() => navigate("/addpost")}>
               <li class="pl-3 flex">
                 <svg color="#fafafa" fill="#fafafa" height="24" viewBox="0 0 24 24" width="24">
                   <path
@@ -219,7 +238,7 @@ const HomePage = () => {
             </button>
           </div>
 
-            {/* Render the modal when isModalOpen is true  */}
+            {/* Render the modal when isModalOpen is true 
             {isModalOpen && (
                 <UploadPostModal
                     isOpen = {true}
@@ -229,10 +248,10 @@ const HomePage = () => {
                         setIsModalOpen(false); // Close the modal
                     }}
                 />
-            )}
+            )} */}
 
           <div class="cursor-pointer  flex  rounded-3xl mb-20 py-2 active:font-semibold hover:bg-gray-50 hover:bg-opacity-10">
-            <img class="w-7 h-7 ml-2 rounded-full " src="https://avatars.githubusercontent.com/u/26464462?v=4" alt="" />
+            <img class="w-7 h-7 ml-2 rounded-full " src={`${BASE_URL}${displayProfile}`} alt="" />
             <button onClick ={ ()=> navigateProfilePage(loggedUser)}>
               <li class="pl-4">Profile</li>
             </button>
@@ -302,7 +321,7 @@ const HomePage = () => {
                             <div className="h-14 w-14 rounded-full bg-white overflow-hidden border-2 border-black">
                                 <img
                                     className="w-full h-full object-cover"
-                                    src={visitedProfile.display_profile}
+                                    src={`${BASE_URL}${visitedProfile.display_profile}`}
                                     alt={visitedProfile.username}
                                 />
                             </div>
@@ -319,23 +338,17 @@ const HomePage = () => {
       
     </section>
     <section class="absolute w-[400px] ml-[1050px] top-[30px] rounded-lg">
-      <div class="py-3 flex space-x-3">
-        <img class="w-[60px] h-[60px]  rounded-full" src="https://avatars.githubusercontent.com/u/26464462?v=4" alt="" />
+      <div onClick ={ () => navigateProfilePage(loggedUser)} class="cursor-pointer py-3 flex space-x-3">
+        <img class="w-[60px] h-[60px]  rounded-full" src={`${BASE_URL}${displayProfile}`} alt="" />
         <div class="mt-2">
-          <p class="text-white cursor-pointer">andrecanuto</p>
-          <p class="text-gray-400">André Cabral</p>
-        </div>
-        <div>
-          <p class="ml-[180px] mt-4 text-sm text-blue-500 cursor-pointer">
-            Mudar
-          </p>
+          <p class="text-white">{loggedUser}</p>
+          <p class="text-gray-400">{fullName}</p>
         </div>
       </div>
       <div>
         <div class="py-3">
           <ul class="flex justify-between">
             <li class="text-gray-400">Suggestions for you</li>
-            <li class="mr-[6px] text-white cursor-pointer">Ver tudo</li>
           </ul>
         </div>
       </div>
@@ -343,7 +356,7 @@ const HomePage = () => {
         {
               profileSuggestions.map((profileSuggestion) => (
                 <div onClick ={ () => navigateProfilePage(profileSuggestion.username)} class="flex space-x-3">
-                    <img class="w-[30px] h-[30px] rounded-full mt-2"  src={profileSuggestion.display_profile}
+                    <img class="w-[30px] h-[30px] rounded-full mt-2"  src={`${BASE_URL}${profileSuggestion.displayProfile}`}
                                     alt={profileSuggestion.username} />
                     <div class="">
                       <p class="text-white cursor-pointer">{profileSuggestion.username}</p>

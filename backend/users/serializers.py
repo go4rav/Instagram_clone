@@ -20,6 +20,20 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+class UserSummarySerializer(serializers.ModelSerializer):
+    # ***IMPORTANT***
+    # what this does.
+    # obj.user_profile.display_profile where obj is the user object
+    display_profile = serializers.ImageField(
+        source="user_profile.display_profile"
+    )
+    full_name = serializers.CharField(
+        source="user_profile.full_name"
+    )
+    class Meta:
+        model = User
+        fields = ["username", "full_name", "display_profile"]
+
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)

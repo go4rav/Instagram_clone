@@ -1,57 +1,78 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import validateRefreshToken from "../utils/tokenUtils";
 import API_BASE_URL from "../config";
-import "./UploadPostModal.css";
+import './UploadPostModal.css'
 
-const UploadPostModal = ({ isOpen, onClose, onPostCreated }) => {
+const UploadPostModal= () => {
     const [caption, setCaption] = useState("");
-    const [image, setImage] = useState(null);
-    const token = localStorage.getItem("token");
+    const [image, setImage] = useState("");
+    const navigate = useNavigate();
 
-    if (!isOpen) return null; // Don’t render if modal is closed
-
-    const handleSubmit = async (e) => {
+    const handleProfileUpdate = async (e) => {
         e.preventDefault();
-        if (!image) {
-            alert("Please select an image");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("caption", caption);
-        formData.append("image", image);
-
         try {
-            await axios.post(`${API_BASE_URL}posts/`, formData, {
+            const formData = new FormData();
+            formData.append("caption", caption);
+            formData.append("image", image);
+            const response = await axios.post(`${API_BASE_URL}/posts/`,
+                formData,{
                 headers: {
-                   "Content-Type": "multipart/form-data",
+                    "Content-Type": "multipart/form-data",
                     "Authorization": `Bearer ${localStorage.getItem("token")}`
-                },
-            });
-             window.location.reload();  // Refresh feed after posting
-            setCaption("");
-            setImage(null);
-            onPostCreated(); // Refresh posts in parent
-            onClose();       // Close modal
+                }});
+            console.log("New post added.")
+            console.log(response);
+            navigate("/");  // Go to feed
         } catch (error) {
-            console.error(error);
-            alert("Failed to upload post");
+//             alert("Profile Update failed!");
+            console.log(error);
         }
     };
 
+    useEffect(() => {
+
+        const checkToken = async () => {
+
+            const accesstoken = localStorage.getItem("token");
+            const refreshtoken = localStorage.getItem("refresh");
+
+            // If already logged in → go home
+            const isValid = await validateRefreshToken(accesstoken, refreshtoken, navigate);
+            if (!isValid) {
+                navigate("/login");
+            }
+
+        }
+
+        checkToken();
+
+
+    }, [navigate]);
+
     return (
-        <div className="modal-overlay">
-            <div className="modal-box">
-                <button className="modal-close" onClick = {onClose}>x
-                </button>
-                <h2 className="modal-title">Create New Post</h2>
-                <form onSubmit={handleSubmit} className="modal-form">
-                    <input type="file" onChange={(e) => setImage(e.target.files[0])} required />
-{/*              <input type="text" placeholder="Enter caption" value={caption} onChange={(e) => setCaption(e.target.value)} /> */}
-            <button type="submit">Upload</button>
-                </form>
-            </div>
+    <div className="add_post-page">
+        <div className="add_post-container">
+            <h2>Create New Post</h2>
+            <br/>
+            <form onSubmit={handleProfileUpdate} className="add_post-form">
+                <input
+                    type="text"
+                    placeholder="Enter Caption"
+                    value={caption}
+                    onChange={(e) => setCaption(e.target.value)}
+                    required
+                />
+
+                <input
+                    type="file"
+                    onChange={(e) => setImage(e.target.files[0])}
+                />
+                <button type="submit">Update</button>
+            </form>
         </div>
+      </div>
     );
 };
 

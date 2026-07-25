@@ -12,11 +12,10 @@ function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<FeedPage />} />
-                <Route path="/upload" element={<UploadPostModal />} />
+                <Route path="/" element={<HomePage />} />
+                <Route path="/addpost" element={<UploadPostModal />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignUpPage />} />
-                <Route path="/home" element={<HomePage />} />
                 <Route path="/updateprofile" element={<UpdateProfile />} />
                 <Route path="/profile/:username" element={<ProfilePage />} />
             </Routes>
